@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<browserconfig>
+    <msapplication>
+        <tile>
+            <square150x150logo src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIHJ4PSIyMCIgZmlsbD0iIzRmNDZlNSIvPjxzdmcgeD0iMzciIHk9IjM3IiB3aWR0aD0iNzYiIGhlaWdodD0iNzYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTguMjUgNi43NWg3LjVNOC4yNSAxMmg3LjVtLTcuNSA1LjI1aDcuNU0zLjc1IDYuNzVoLjAwN3YuMDA4SDMuNzVWNi43NVptLjM3NSAwYS4zNzUuMzc1IDAgMSAxLS43NSAwIC4zNzUuMzc1IDAgMCAxIC43NSAwWk0zLjc1IDEyaC4wMDd2LjAwOEgzLjc1VjEyWm0uMzc1IDBhLjM3NS4zNzUgMCAxIDEtLjc1IDAgLjM3NS4zNzUgMCAwIDEgLjc1IDBabS0uMzc1IDUuMjVoLjAwN3YuMDA4SDMuNzV2LS4wMDhabS4zNzUgMGEuMzc1LjM3NSAwIDEgMS0uNzUgMCAuMzc1LjM3NSAwIDAgMSAuNzUgMFoiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPjwvc3ZnPjwvc3ZnPg=="/>
+            <TileColor>#4f46e5</TileColor>
+        </tile>
+    </msapplication>
+</browserconfig>
