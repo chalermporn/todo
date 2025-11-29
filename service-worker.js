@@ -1,12 +1,9 @@
-const CACHE_NAME = 'todo-app-v2';
+const CACHE_NAME = 'todo-app-v3';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  './browserconfig.xml',
-  'https://cdn.tailwindcss.com',
-  'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap',
-  'https://fonts.gstatic.com/s/ibmplexsansthai/v10/m8JWjfRfY7WVQciUuoqRBVNf6CstOkvKlA.woff2'
+  './browserconfig.xml'
 ];
 
 // Install Service Worker
@@ -15,12 +12,16 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('📦 Service Worker: Caching files');
+        console.log('📦 Service Worker: Caching local files only');
+        // Cache only local files to avoid CORS issues during installation
         return cache.addAll(urlsToCache);
       })
       .then(() => {
         console.log('✅ Service Worker: Installation complete');
         return self.skipWaiting();
+      })
+      .catch(error => {
+        console.error('❌ Service Worker: Installation failed:', error);
       })
   );
 });
@@ -45,63 +46,95 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch Event - Cache First Strategy with improved error handling
+// Fetch Event - Smart caching strategy
 self.addEventListener('fetch', event => {
-  // Skip non-GET requests and chrome-extension requests
-  if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension://')) {
+  const url = new URL(event.request.url);
+  
+  // Skip non-GET requests, chrome-extension, and devtools
+  if (event.request.method !== 'GET' || 
+      event.request.url.startsWith('chrome-extension://') ||
+      event.request.url.startsWith('devtools://')) {
     return;
   }
 
+  // For external resources (CDN, fonts), use network-first with cache fallback
+  if (url.origin !== location.origin) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Cache successful opaque responses (CORS resources)
+          if (response && (response.status === 200 || response.type === 'opaque')) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME)
+              .then(cache => {
+                cache.put(event.request, responseToCache);
+              })
+              .catch(error => {
+                console.log('💾 Service Worker: External cache failed (ignored):', error.message);
+              });
+          }
+          return response;
+        })
+        .catch(error => {
+          console.log('🌐 Service Worker: Network failed for external resource, trying cache');
+          // Fallback to cache if network fails
+          return caches.match(event.request)
+            .then(cachedResponse => {
+              if (cachedResponse) {
+                console.log('📁 Service Worker: Serving external from cache');
+                return cachedResponse;
+              }
+              // If not cached, let it fail naturally (browser will handle it)
+              console.log('❌ Service Worker: External resource not available offline');
+              throw error;
+            });
+        })
+    );
+    return;
+  }
+
+  // For local resources, use cache-first strategy
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Return cached version if available
         if (response) {
-          console.log('📁 Service Worker: Serving from cache:', event.request.url);
+          console.log('📁 Service Worker: Serving local from cache');
           return response;
         }
         
-        console.log('🌐 Service Worker: Fetching from network:', event.request.url);
+        console.log('🌐 Service Worker: Fetching local from network');
         return fetch(event.request).then(response => {
-          // Don't cache non-successful responses or non-basic responses
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+          // Only cache successful responses
+          if (!response || response.status !== 200) {
             return response;
           }
 
-          // Don't cache analytics or tracking requests
+          // Don't cache analytics or tracking
           if (event.request.url.includes('analytics') || 
               event.request.url.includes('tracking') ||
-              event.request.url.includes('gtag') ||
-              event.request.url.includes('facebook.com') ||
-              event.request.url.includes('google-analytics.com')) {
+              event.request.url.includes('gtag')) {
             return response;
           }
 
-          // Clone the response for caching
           const responseToCache = response.clone();
-
           caches.open(CACHE_NAME)
             .then(cache => {
               cache.put(event.request, responseToCache);
             })
             .catch(error => {
-              console.log('💾 Service Worker: Cache put failed:', error);
+              console.log('💾 Service Worker: Local cache failed:', error);
             });
 
           return response;
         }).catch(error => {
-          console.log('❌ Service Worker: Fetch failed:', error);
+          console.log('❌ Service Worker: Local fetch failed:', error);
           
-          // Return offline fallback for navigation requests
+          // Return offline fallback for navigation
           if (event.request.mode === 'navigate') {
             return caches.match('./index.html');
           }
           
-          // For other requests, return a minimal response
-          return new Response('Network error', {
-            status: 408,
-            headers: { 'Content-Type': 'text/plain' }
-          });
+          throw error;
         });
       })
   );
